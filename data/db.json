@@ -1,0 +1,68 @@
+{
+  "wishes": [],
+  "memories": [
+    {
+      "id": "m1",
+      "imageUrl": "https://picsum.photos/seed/birthday-mem1/800/600",
+      "caption": "That unforgettable summer road trip where we got lost, laughed till our stomachs hurt, and found that secret beach.",
+      "date": "August 2025",
+      "order": 1
+    },
+    {
+      "id": "m2",
+      "imageUrl": "https://picsum.photos/seed/birthday-mem2/800/600",
+      "caption": "Celebrating your achievements together. Always cheering you on from the front row!",
+      "date": "December 2025",
+      "order": 2
+    },
+    {
+      "id": "m3",
+      "imageUrl": "https://picsum.photos/seed/love-cafe/800/600",
+      "caption": "Cozy rainy Sunday mornings spent talking for hours over hot cups of coffee.",
+      "date": "January 2026",
+      "order": 3
+    },
+    {
+      "id": "m5",
+      "imageUrl": "https://picsum.photos/seed/love-sparkle/800/600",
+      "caption": "Celebrating small victories. Together, we can take on the entire world.",
+      "date": "April 2026",
+      "order": 4
+    },
+    {
+      "id": "m6",
+      "imageUrl": "https://picsum.photos/seed/love-picnic/800/600",
+      "caption": "That wonderful summer picnic where we laughed until we cried.",
+      "date": "May 2026",
+      "order": 5
+    },
+    {
+      "id": "m7",
+      "imageUrl": "https://picsum.photos/seed/love-snow/800/600",
+      "caption": "Our first snow together. Freezing outside, but so warm in my heart.",
+      "date": "June 2026",
+      "order": 6
+    },
+    {
+      "id": "m8",
+      "imageUrl": "https://picsum.photos/seed/love-future/800/600",
+      "caption": "Looking forward to a hundred more birthdays by your side.",
+      "date": "July 2026",
+      "order": 7
+    },
+    {
+      "id": "vtjdo5u",
+      "imageUrl": "https://ik.imagekit.io/faaztech/daneyal-avatar-2_x4ce5ACr0.png",
+      "caption": "I Love you jaann",
+      "date": "25 december",
+      "order": 8
+    }
+  ],
+  "config": {
+    "birthdayName": "Sania",
+    "birthDate": "2026-07-20",
+    "envelopeTitle": "A Secret invitation for someone very special...",
+    "theme": "rose",
+    "isMusicEnabled": true
+  }
+}
