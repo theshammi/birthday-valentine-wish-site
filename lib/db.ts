@@ -38,10 +38,10 @@ export interface DatabaseSchema {
 }
 
 const DEFAULT_CONFIG: AppConfig = {
-  birthdayName: "Sarah",
+  birthdayName: "Anam",
   birthDate: "2026-07-20",
   envelopeTitle: "A Secret invitation for someone very special...",
-  theme: "gold",
+  theme: "rose",
   isMusicEnabled: true,
 };
 
@@ -153,7 +153,7 @@ export async function readDb(): Promise<DatabaseSchema> {
     }
     const raw = fs.readFileSync(DB_PATH, "utf-8");
     const parsed = JSON.parse(raw);
-    
+
     // Ensure all top-level keys exist to prevent undefined errors
     return {
       wishes: parsed.wishes || [],

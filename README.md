@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Birthday & Valentine Wish Site 🎈💖
 
-## Getting Started
+A beautiful, interactive Next.js application designed to create personalized and memorable celebration experiences for birthdays and Valentine's Day. 
 
-First, run the development server:
+> **⚠️ Note:** This is the very first version of the project. It is currently in its early stages of development, so you might encounter some bugs or unexpected issues. 
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features ✨
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Personalized Envelope Entry:** A beautiful introductory animation to welcome the user.
+- **Memory Timeline:** Interactive timeline to showcase favorite photos and shared memories.
+- **Gifts Section:** A dedicated area to highlight special gifts, surprises, or messages.
+- **Interactive WebGL Background:** Stunning and dynamic visual effects for a premium feel.
+- **Admin Dashboard:** Manage your site's images and memories via an integrated dashboard.
+- **ImageKit Integration:** Seamless and optimized image hosting and delivery.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Getting Started 🚀
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
+- Node.js 18+ installed.
+- An [ImageKit](https://imagekit.io/) account for media handling.
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/theshammi/birthday-valentine-wish-site.git
+   cd birthday-valentine-wish-site
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Install the dependencies:
+   ```bash
+   npm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Set up environment variables:
+   Create a `.env.local` file in the root directory and configure your ImageKit credentials:
+   ```env
+   NEXT_PUBLIC_PUBLIC_KEY=your_imagekit_public_key
+   NEXT_PUBLIC_URL_ENDPOINT=your_imagekit_url_endpoint
+   PRIVATE_KEY=your_imagekit_private_key
+   ```
 
-## Deploy on Vercel
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Usage 🛠️
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Main View (`/`):** The main page serves as the interactive greeting card experience.
+- **Admin Dashboard (`/admin`):** Navigate to the admin route to upload and manage the images shown in the timeline and gifts section.
+
+## License 📄
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

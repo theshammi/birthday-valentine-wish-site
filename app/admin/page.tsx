@@ -87,19 +87,6 @@ export default function AdminPage() {
     setIsAuthenticated(false);
   };
 
-  // Moderation Actions
-  const handleModerate = async (id: string, action: "approve" | "delete") => {
-    const res = await moderateWish(id, action);
-    if (res.success) {
-      setWishes((prev) => {
-        if (action === "approve") {
-          return prev.map((w) => (w.id === id ? { ...w, isApproved: true } : w));
-        } else {
-          return prev.filter((w) => w.id !== id);
-        }
-      });
-    }
-  };
 
   // ImageKit file uploader & Memory submission
   const handleMemorySubmit = async (e: React.FormEvent) => {
