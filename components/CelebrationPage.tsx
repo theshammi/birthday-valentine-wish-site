@@ -24,12 +24,14 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
 
   const handleOpen = () => {
     setIsOpened(true);
-    if (!audioRef.current) {
-      audioRef.current = new Audio("/indila-love.mp3");
-      audioRef.current.loop = true;
-      audioRef.current.volume = 0.5;
+    if (config.isMusicEnabled !== false) {
+      if (!audioRef.current) {
+        audioRef.current = new Audio(config.backgroundMusicUrl || "/indila-love.mp3");
+        audioRef.current.loop = true;
+        audioRef.current.volume = 0.5;
+      }
+      audioRef.current.play().catch(console.error);
     }
-    audioRef.current.play().catch(console.error);
   };
 
   const toggleMute = () => {
@@ -139,7 +141,7 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
                 transition={{ delay: 0.8, duration: 1 }}
                 className="font-love text-4xl md:text-6xl text-rose-400/90 tracking-wide"
               >
-                Love of my life,
+                {config.heroGreeting || "Love of my life,"}
               </motion.h2>
 
               <motion.h1
@@ -160,9 +162,8 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
               className="relative pt-6"
             >
               <Heart weight="fill" className="w-6 h-6 text-rose-500/30 absolute -top-2 left-1/2 -translate-x-1/2" />
-              <p className="text-zinc-300 max-w-lg text-base md:text-lg leading-relaxed font-serif italic drop-shadow-md">
-                "In all the world, there is no heart for me like yours.<br />
-                In all the world, there is no love for you like mine."
+              <p className="text-zinc-300 max-w-lg text-base md:text-lg leading-relaxed font-serif italic drop-shadow-md whitespace-pre-wrap text-center">
+                "{config.heroQuote || "In all the world, there is no heart for me like yours.\nIn all the world, there is no love for you like mine."}"
               </p>
             </motion.div>
           </div>
@@ -179,10 +180,10 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
                 Snapshot Timeline
               </div>
               <h2 className="font-love text-4xl md:text-5.5xl text-rose-300 leading-none drop-shadow-[0_0_15px_rgba(244,63,94,0.3)]">
-                Our Memories
+                {config.memoriesTitle || "Our Memories"}
               </h2>
               <p className="text-zinc-400 text-xs leading-relaxed font-sans">
-                A timeline of our favorite moments. Each polaroid is a beautiful memory, a quiet smile, and a story we shared together.
+                {config.memoriesDescription || "A timeline of our favorite moments. Each polaroid is a beautiful memory, a quiet smile, and a story we shared together."}
               </p>
 
               {/* Wavy line connecting intro to the first item */}
