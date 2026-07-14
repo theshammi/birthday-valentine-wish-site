@@ -7,6 +7,7 @@ import EnvelopeEntry from "./EnvelopeEntry";
 import HorizontalScrollWrapper from "./HorizontalScrollWrapper";
 import GiftsSection from "./GiftsSection";
 import BlurRevealText from "./BlurRevealText";
+import Image from "next/image";
 import { Sparkle, Calendar, Heart, Camera, ArrowRight, MapPin, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -275,10 +276,12 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
                           className="object-contain w-full h-full filter saturate-90 brightness-95 bg-zinc-900"
                         />
                       ) : (
-                        <img
+                        <Image
                           src={memory.imageUrl}
                           alt={memory.caption}
-                          className="object-contain w-full h-full filter saturate-90 brightness-95 bg-zinc-900"
+                          fill
+                          className="object-contain filter saturate-90 brightness-95 bg-zinc-900"
+                          unoptimized
                         />
                       )}
                     </div>
@@ -374,10 +377,12 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
                     className="object-contain w-full h-full bg-zinc-900"
                   />
                 ) : (
-                  <img
+                  <Image
                     src={activeMemory.imageUrl}
                     alt={activeMemory.caption}
-                    className="object-contain w-full h-full bg-zinc-900"
+                    fill
+                    className="object-contain bg-zinc-900"
+                    unoptimized
                   />
                 )}
               </div>

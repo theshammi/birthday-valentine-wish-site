@@ -64,10 +64,12 @@ export default function MemoryTimeline({ memories }: MemoryTimelineProps) {
                   className={`bg-[#fbfbf9] p-4 pb-6 rounded-sm shadow-2xl transition-transform duration-300 hover:rotate-0 hover:scale-105 select-none text-zinc-800 ${rotationAngle} max-w-md w-full border border-zinc-200/50`}
                 >
                   <div className="relative aspect-4/3 w-full bg-zinc-100 overflow-hidden border border-zinc-200">
-                    <img
+                    <Image
                       src={memory.imageUrl}
                       alt={memory.caption}
-                      className="object-cover w-full h-full filter saturate-90 brightness-95"
+                      fill
+                      className="object-cover filter saturate-90 brightness-95"
+                      unoptimized
                     />
                   </div>
 

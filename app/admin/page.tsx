@@ -6,7 +6,8 @@ import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebas
 import { ref, onValue, set } from "firebase/database";
 import { auth, database } from "../../lib/firebase";
 import { Memory, AppConfig, DEFAULT_CONFIG } from "../../lib/db";
-import { Lock, SignOut, Image as ImageIcon, Gear, Trash, UploadSimple, Sparkle, FilmStrip } from "@phosphor-icons/react";
+import Image from "next/image";
+import { Lock, SignOut, Image as ImageIcon, Gear, Trash, UploadSimple, Sparkle, FilmStrip, PencilSimple } from "@phosphor-icons/react";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -35,6 +36,7 @@ export default function AdminPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [configSuccess, setConfigSuccess] = useState(false);
   const [memorySuccess, setMemorySuccess] = useState(false);
+  const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -74,60 +76,93 @@ export default function AdminPage() {
   // ImageKit file uploader & Memory submission
   const handleMemorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) return;
+    if (!editingMemory && !selectedFile) return;
     setUploading(true);
     setMemorySuccess(false);
 
     try {
-      const authParams = await getImageKitAuth();
-      if (!authParams) {
-        alert("Failed to authenticate with ImageKit. Ensure you are logged in.");
-        return;
+      let imageUrl = editingMemory?.imageUrl || "";
+      let videoUrl = editingMemory?.videoUrl || undefined;
+
+      if (selectedFile) {
+        const authParams = await getImageKitAuth();
+        if (!authParams) {
+          alert("Failed to authenticate with ImageKit. Ensure you are logged in.");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("fileName", selectedFile.name);
+        formData.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "");
+        formData.append("signature", authParams.signature);
+        formData.append("expire", authParams.expire.toString());
+        formData.append("token", authParams.token);
+        formData.append("folder", process.env.NEXT_PUBLIC_IMAGEKIT_FOLDER || "/birthday-valentine-wish-site");
+
+        const result = await new Promise<any>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "https://upload.imagekit.io/api/v1/files/upload");
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              setUploadProgress(Math.round((event.loaded / event.total) * 100));
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              reject(new Error("Direct ImageKit upload failed"));
+            }
+          };
+          xhr.onerror = () => reject(new Error("Network Error"));
+          xhr.send(formData);
+        });
+        const uploadedUrl = result.url;
+
+        const isVideo = selectedFile.type.startsWith("video/");
+        imageUrl = isVideo ? "https://picsum.photos/seed/video-thumb/800/600" : uploadedUrl;
+        videoUrl = isVideo ? uploadedUrl : undefined;
       }
 
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("fileName", selectedFile.name);
-      formData.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "");
-      formData.append("signature", authParams.signature);
-      formData.append("expire", authParams.expire.toString());
-      formData.append("token", authParams.token);
-      formData.append("folder", process.env.NEXT_PUBLIC_IMAGEKIT_FOLDER || "/birthday-valentine-wish-site");
-
-      const result = await new Promise<any>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://upload.imagekit.io/api/v1/files/upload");
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            setUploadProgress(Math.round((event.loaded / event.total) * 100));
+      let updatedMemories = [];
+      if (editingMemory) {
+        // Edit Mode
+        updatedMemories = memories.map((m) => {
+          if (m.id === editingMemory.id) {
+            const updated: Memory = {
+              ...m,
+              imageUrl,
+              caption: caption.trim() || "A beautiful memory.",
+              date: date.trim() || "Memory Date",
+            };
+            if (videoUrl) {
+              updated.videoUrl = videoUrl;
+            } else if (selectedFile && !selectedFile.type.startsWith("video/")) {
+              // Delete old videoUrl if we updated it to a photo
+              delete updated.videoUrl;
+            }
+            return updated;
           }
+          return m;
+        });
+      } else {
+        // Create Mode
+        const newMemory: Memory = {
+          id: Math.random().toString(36).substring(2, 9),
+          imageUrl,
+          caption: caption.trim() || "A beautiful memory.",
+          date: date.trim() || "Memory Date",
+          order: memories.length + 1,
         };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(JSON.parse(xhr.responseText));
-          } else {
-            reject(new Error("Direct ImageKit upload failed"));
-          }
-        };
-        xhr.onerror = () => reject(new Error("Network Error"));
-        xhr.send(formData);
-      });
-      const uploadedUrl = result.url;
 
-      const isVideo = selectedFile.type.startsWith("video/");
-      const imageUrl = isVideo ? "https://picsum.photos/seed/video-thumb/800/600" : uploadedUrl;
-      const videoUrl = isVideo ? uploadedUrl : undefined;
+        if (videoUrl) {
+          newMemory.videoUrl = videoUrl;
+        }
 
-      const newMemory: Memory = {
-        id: Math.random().toString(36).substring(2, 9),
-        imageUrl,
-        videoUrl,
-        caption: caption.trim() || "A beautiful memory.",
-        date: date.trim() || "Memory Date",
-        order: memories.length + 1,
-      };
+        updatedMemories = [...memories, newMemory];
+      }
 
-      const updatedMemories = [...memories, newMemory];
       const memRef = ref(database, 'greetings/main/memories');
       await set(memRef, updatedMemories);
 
@@ -135,6 +170,7 @@ export default function AdminPage() {
       setCaption("");
       setDate("");
       setSelectedFile(null);
+      setEditingMemory(null);
     } catch (err) {
       console.error(err);
       alert("Failed to upload memory. Check console for details.");
@@ -423,7 +459,9 @@ export default function AdminPage() {
               </div>
 
               <form onSubmit={handleMemorySubmit} className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 space-y-4">
-                <h3 className="text-sm font-semibold text-amber-400 font-mono uppercase tracking-wider">Add New Memory Card</h3>
+                <h3 className="text-sm font-semibold text-amber-400 font-mono uppercase tracking-wider">
+                  {editingMemory ? "Edit Memory Card" : "Add New Memory Card"}
+                </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -454,7 +492,7 @@ export default function AdminPage() {
                 <div className="border-2 border-dashed border-zinc-800 rounded-2xl p-6 text-center cursor-pointer hover:border-amber-500/40 transition-colors relative flex flex-col items-center">
                   <input
                     type="file"
-                    required
+                    required={!editingMemory}
                     accept="image/*,video/*"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
@@ -469,7 +507,15 @@ export default function AdminPage() {
                       {selectedFile.type.startsWith("video/") ? (
                         <video src={URL.createObjectURL(selectedFile)} className="w-full h-full object-cover" autoPlay muted loop />
                       ) : (
-                        <img src={URL.createObjectURL(selectedFile)} className="w-full h-full object-contain" alt="preview" />
+                        <Image src={URL.createObjectURL(selectedFile)} alt="preview" fill className="object-contain" unoptimized />
+                      )}
+                    </div>
+                  ) : editingMemory ? (
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-zinc-800 pointer-events-none mb-4 bg-zinc-950">
+                      {editingMemory.videoUrl ? (
+                        <video src={editingMemory.videoUrl} className="w-full h-full object-cover" autoPlay muted loop />
+                      ) : (
+                        <Image src={editingMemory.imageUrl} alt="preview" fill className="object-contain" unoptimized />
                       )}
                     </div>
                   ) : (
@@ -477,7 +523,7 @@ export default function AdminPage() {
                   )}
                   
                   <p className="text-xs font-mono text-zinc-400 relative z-20">
-                    {selectedFile ? selectedFile.name : "Click to select a photo to upload"}
+                    {selectedFile ? selectedFile.name : editingMemory ? "Leave blank to keep current photo/video" : "Click to select a photo to upload"}
                   </p>
                   
                   {uploadProgress > 0 && uploadProgress < 100 && (
@@ -487,16 +533,35 @@ export default function AdminPage() {
                   )}
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={uploading || !selectedFile}
-                  className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
-                >
-                  {uploading ? "Uploading to ImageKit..." : "Save Memory"}
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    disabled={uploading || (!selectedFile && !editingMemory)}
+                    className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+                  >
+                    {uploading ? "Saving..." : editingMemory ? "Update Memory" : "Save Memory"}
+                  </button>
+
+                  {editingMemory && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingMemory(null);
+                        setCaption("");
+                        setDate("");
+                        setSelectedFile(null);
+                      }}
+                      className="px-6 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-sm shadow-md transition-colors cursor-pointer"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
 
                 {memorySuccess && (
-                  <p className="text-emerald-400 text-xs font-mono">Memory successfully uploaded and saved!</p>
+                  <p className="text-emerald-400 text-xs font-mono">
+                    Memory successfully {editingMemory ? "updated" : "uploaded"} and saved!
+                  </p>
                 )}
               </form>
 
@@ -508,22 +573,40 @@ export default function AdminPage() {
                       key={mem.id} 
                       className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 flex gap-4 items-center"
                     >
-                      <img 
-                        src={mem.imageUrl} 
-                        alt={mem.caption} 
-                        className="w-16 h-16 object-cover rounded-lg border border-zinc-800"
-                      />
+                      <div className="relative w-16 h-16 overflow-hidden rounded-lg border border-zinc-800 flex-shrink-0">
+                        <Image 
+                          src={mem.imageUrl} 
+                          alt={mem.caption} 
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-amber-400 font-mono">{mem.date}</p>
                         <p className="text-sm text-zinc-300 truncate font-serif italic">"{mem.caption}"</p>
                       </div>
-                      <button
-                        onClick={() => handleDeleteMemory(mem.id)}
-                        className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 cursor-pointer transition-colors"
-                        title="Delete Memory"
-                      >
-                        <Trash className="w-4 h-4" />
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingMemory(mem);
+                            setCaption(mem.caption);
+                            setDate(mem.date);
+                            setSelectedFile(null);
+                          }}
+                          className="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 rounded-lg border border-amber-500/20 cursor-pointer transition-colors"
+                          title="Edit Memory"
+                        >
+                          <PencilSimple className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMemory(mem.id)}
+                          className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 cursor-pointer transition-colors"
+                          title="Delete Memory"
+                        >
+                          <Trash className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
