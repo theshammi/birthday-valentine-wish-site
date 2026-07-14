@@ -92,6 +92,7 @@ export default function AdminPage() {
       formData.append("signature", authParams.signature);
       formData.append("expire", authParams.expire.toString());
       formData.append("token", authParams.token);
+      formData.append("folder", process.env.NEXT_PUBLIC_IMAGEKIT_FOLDER || "/birthday-valentine-wish-site");
 
       const result = await new Promise<any>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -177,6 +178,7 @@ export default function AdminPage() {
       formData.append("signature", authParams.signature);
       formData.append("expire", authParams.expire.toString());
       formData.append("token", authParams.token);
+      formData.append("folder", process.env.NEXT_PUBLIC_IMAGEKIT_FOLDER || "/birthday-valentine-wish-site");
 
       const result = await new Promise<any>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -229,6 +231,7 @@ export default function AdminPage() {
       formData.append("signature", authParams.signature);
       formData.append("expire", authParams.expire.toString());
       formData.append("token", authParams.token);
+      formData.append("folder", process.env.NEXT_PUBLIC_IMAGEKIT_FOLDER || "/birthday-valentine-wish-site");
 
       const result = await new Promise<any>((resolve, reject) => {
         const xhr = new XMLHttpRequest();

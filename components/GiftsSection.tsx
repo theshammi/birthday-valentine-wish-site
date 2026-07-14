@@ -149,29 +149,54 @@ export default function GiftsSection({ finalVideoUrl, onVideoPlay, onVideoEnd, e
       </AnimatePresence>
 
       {/* Typography Container */}
-      {!showEndScreen && textStage > 0 && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center pointer-events-none p-6">
-          <AnimatePresence mode="wait">
-            <motion.h2
-              key={textStage}
-              initial={{ opacity: 0, y: 15, filter: "blur(12px)", scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
-              exit={{ opacity: 0, y: -15, filter: "blur(12px)", scale: 1.05 }}
-              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-              className={`text-center leading-relaxed max-w-5xl mx-auto drop-shadow-2xl ${textStage === 5
-                  ? "font-love text-5xl md:text-8xl text-rose-300 drop-shadow-[0_0_40px_rgba(244,63,94,0.6)] leading-tight py-4"
-                  : "font-love text-4xl md:text-6xl text-rose-200 tracking-wide py-4"
-                }`}
-            >
-              <BlurRevealText 
-                text={phrases[textStage]} 
-                staggerDelay={textRevealSpeed}
-                enabled={enableTextReveal}
-              />
-            </motion.h2>
-          </AnimatePresence>
-        </div>
-      )}
+      {!showEndScreen && textStage > 0 && (() => {
+        const text = phrases[textStage] || "";
+        const len = text.length;
+        
+        let sizeClass = "";
+        if (textStage === phrases.length - 1) {
+          // Finale text
+          if (len > 80) {
+            sizeClass = "text-2xl sm:text-4xl md:text-5xl lg:text-6xl py-2";
+          } else if (len > 40) {
+            sizeClass = "text-3xl sm:text-5xl md:text-6xl lg:text-7xl py-3";
+          } else {
+            sizeClass = "text-4xl sm:text-7xl md:text-8xl lg:text-9xl py-4";
+          }
+        } else {
+          // Regular text
+          if (len > 80) {
+            sizeClass = "text-xl sm:text-3xl md:text-4xl lg:text-5xl py-2";
+          } else if (len > 40) {
+            sizeClass = "text-2xl sm:text-4xl md:text-5xl lg:text-6xl py-3";
+          } else {
+            sizeClass = "text-3xl sm:text-5xl md:text-6xl lg:text-7xl py-4";
+          }
+        }
+
+        return (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center pointer-events-none p-6">
+            <AnimatePresence mode="wait">
+              <motion.h2
+                key={textStage}
+                initial={{ opacity: 0, y: 15, filter: "blur(12px)", scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
+                exit={{ opacity: 0, y: -15, filter: "blur(12px)", scale: 1.05 }}
+                transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                className={`text-center leading-relaxed max-w-4xl mx-auto drop-shadow-2xl px-4 font-love tracking-wide ${
+                  textStage === phrases.length - 1 ? "text-rose-300 drop-shadow-[0_0_40px_rgba(244,63,94,0.6)] leading-tight" : "text-rose-200"
+                } ${sizeClass}`}
+              >
+                <BlurRevealText 
+                  text={text} 
+                  staggerDelay={textRevealSpeed}
+                  enabled={enableTextReveal}
+                />
+              </motion.h2>
+            </AnimatePresence>
+          </div>
+        );
+      })()}
 
       {/* After Video End Screen */}
       <AnimatePresence>

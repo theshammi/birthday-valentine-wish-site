@@ -79,7 +79,7 @@ export default function BlurRevealText({
                   {char}
                 </motion.span>
               ))}
-              {wordIdx < wordsArr.length - 1 && <span className="inline">&nbsp;</span>}
+              {wordIdx < wordsArr.length - 1 && <span className="inline"> </span>}
             </span>
           ))}
         </span>
