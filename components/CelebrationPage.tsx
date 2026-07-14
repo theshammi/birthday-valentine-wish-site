@@ -6,6 +6,7 @@ import WebGLBackground from "./WebGLBackground";
 import EnvelopeEntry from "./EnvelopeEntry";
 import HorizontalScrollWrapper from "./HorizontalScrollWrapper";
 import GiftsSection from "./GiftsSection";
+import BlurRevealText from "./BlurRevealText";
 import { Sparkle, Calendar, Heart, Camera, ArrowRight, MapPin, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -38,6 +39,21 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
     if (audioRef.current) {
       audioRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
+    }
+  };
+
+  const handleFinalVideoPlay = (hasAudio: boolean) => {
+    const setting = config.muteBgmDuringVideo || "auto";
+    if (setting === "yes" || (setting === "auto" && hasAudio)) {
+      if (audioRef.current && !isMuted) {
+        audioRef.current.pause();
+      }
+    }
+  };
+
+  const handleFinalVideoEnd = () => {
+    if (config.isMusicEnabled !== false && !isMuted && audioRef.current) {
+      audioRef.current.play().catch(console.error);
     }
   };
 
@@ -135,14 +151,14 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
 
             {/* Main Title with Staggered Entrance */}
             <div className="space-y-4">
-              <motion.h2
-                initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
-                animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                transition={{ delay: 0.8, duration: 1 }}
-                className="font-love text-4xl md:text-6xl text-rose-400/90 tracking-wide"
-              >
-                {config.heroGreeting || "Love of my life,"}
-              </motion.h2>
+              <h2 className="font-love text-4xl md:text-6xl text-rose-400/90 tracking-wide">
+                <BlurRevealText 
+                  text={config.heroGreeting || "Love of my life,"} 
+                  delay={0.8} 
+                  staggerDelay={config.textRevealSpeed}
+                  enabled={config.enableTextReveal}
+                />
+              </h2>
 
               <motion.h1
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -150,7 +166,12 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
                 transition={{ delay: 1.2, duration: 1.2, type: "spring" }}
                 className="font-love font-bold tracking-widest text-6xl sm:text-7xl md:text-[8rem] bg-gradient-to-r from-rose-300 via-pink-400 to-rose-200 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(244,63,94,0.4)] leading-tight py-6"
               >
-                {config.birthdayName}
+                <BlurRevealText 
+                  text={config.birthdayName} 
+                  delay={1.2} 
+                  staggerDelay={config.textRevealSpeed}
+                  enabled={config.enableTextReveal}
+                />
               </motion.h1>
             </div>
 
@@ -159,12 +180,17 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 2.5, duration: 2 }}
-              className="relative pt-6"
+              className="relative pt-6 w-full max-w-lg mx-auto"
             >
               <Heart weight="fill" className="w-6 h-6 text-rose-500/30 absolute -top-2 left-1/2 -translate-x-1/2" />
-              <p className="text-zinc-300 max-w-lg text-base md:text-lg leading-relaxed font-serif italic drop-shadow-md whitespace-pre-wrap text-center">
-                "{config.heroQuote || "In all the world, there is no heart for me like yours.\nIn all the world, there is no love for you like mine."}"
-              </p>
+              <div className="text-zinc-300 text-base md:text-lg leading-relaxed font-serif italic drop-shadow-md text-center">
+                <BlurRevealText 
+                  text={config.heroQuote || "In all the world, there is no heart for me like yours.\nIn all the world, there is no love for you like mine."} 
+                  delay={2.5} 
+                  staggerDelay={config.textRevealSpeed}
+                  enabled={config.enableTextReveal}
+                />
+              </div>
             </motion.div>
           </div>
         </section>
@@ -274,7 +300,16 @@ export default function CelebrationPage({ initialWishes, initialMemories, config
         <section className="w-screen h-screen flex-shrink-0 flex items-center justify-center relative p-8 md:p-16 z-10">
           <div className="w-full max-w-5xl h-dvh flex flex-col justify-between pt-16">
             <div className="flex-1 flex items-center justify-center">
-              <GiftsSection finalVideoUrl={config.finalVideoUrl} />
+              <GiftsSection 
+                finalVideoUrl={config.finalVideoUrl} 
+                onVideoPlay={handleFinalVideoPlay} 
+                onVideoEnd={handleFinalVideoEnd}
+                endScreenTitle={config.endScreenTitle}
+                endScreenBody={config.endScreenBody}
+                enableTextReveal={config.enableTextReveal}
+                textRevealSpeed={config.textRevealSpeed}
+                afterVideoPhrases={config.afterVideoPhrases}
+              />
             </div>
 
             <footer className="border-t border-zinc-900/60 pt-6 flex flex-col sm:flex-row justify-between items-center text-zinc-600 text-[10px] font-mono w-full">

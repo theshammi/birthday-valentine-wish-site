@@ -29,3 +29,15 @@ export async function getImageKitAuth(): Promise<{ token: string; expire: number
     return null;
   }
 }
+
+export async function deleteImageKitFile(fileId: string): Promise<boolean> {
+  try {
+    const ik = (await import("../lib/imagekit")).getImageKitInstance();
+    await ik.deleteFile(fileId);
+    console.log("Successfully deleted file from ImageKit:", fileId);
+    return true;
+  } catch (error) {
+    console.error("Failed to delete file from ImageKit:", error);
+    return false;
+  }
+}

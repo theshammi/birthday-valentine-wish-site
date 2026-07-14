@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getImageKitAuth } from "../actions";
+import { getImageKitAuth, deleteImageKitFile } from "../actions";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import { ref, onValue, set } from "firebase/database";
 import { auth, database } from "../../lib/firebase";
 import { Memory, AppConfig, DEFAULT_CONFIG } from "../../lib/db";
-import { Lock, SignOut, Image as ImageIcon, Gear, Trash, UploadSimple, Sparkle } from "@phosphor-icons/react";
+import { Lock, SignOut, Image as ImageIcon, Gear, Trash, UploadSimple, Sparkle, FilmStrip } from "@phosphor-icons/react";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -15,7 +15,7 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState("");
   
   // Dashboard states
-  const [activeTab, setActiveTab] = useState<"memories" | "settings">("memories");
+  const [activeTab, setActiveTab] = useState<"memories" | "settings" | "media">("memories");
   const [memories, setMemories] = useState<Memory[]>([]);
   const [config, setConfig] = useState<AppConfig | null>(null);
 
@@ -197,7 +197,11 @@ export default function AdminPage() {
         xhr.send(formData);
       });
       
-      const updatedConfig = { ...config, finalVideoUrl: result.url };
+      if (config.finalVideoFileId) {
+        await deleteImageKitFile(config.finalVideoFileId);
+      }
+      
+      const updatedConfig = { ...config, finalVideoUrl: result.url, finalVideoFileId: result.fileId };
       const confRef = ref(database, 'greetings/main/config');
       await set(confRef, updatedConfig);
       
@@ -245,7 +249,11 @@ export default function AdminPage() {
         xhr.send(formData);
       });
       
-      const updatedConfig = { ...config, backgroundMusicUrl: result.url };
+      if (config.backgroundMusicFileId) {
+        await deleteImageKitFile(config.backgroundMusicFileId);
+      }
+      
+      const updatedConfig = { ...config, backgroundMusicUrl: result.url, backgroundMusicFileId: result.fileId };
       const confRef = ref(database, 'greetings/main/config');
       await set(confRef, updatedConfig);
       
@@ -257,6 +265,48 @@ export default function AdminPage() {
     } finally {
       setAudioUploading(false);
       setAudioProgress(0);
+    }
+  };
+
+  const handleDeleteFinalVideo = async () => {
+    if (!config) return;
+    if (!confirm("Are you sure you want to delete the final video?")) return;
+    
+    try {
+      if (config.finalVideoFileId) {
+        await deleteImageKitFile(config.finalVideoFileId);
+      }
+      const updatedConfig = { ...config };
+      delete updatedConfig.finalVideoUrl;
+      delete updatedConfig.finalVideoFileId;
+      
+      const confRef = ref(database, 'greetings/main/config');
+      await set(confRef, updatedConfig);
+      alert("Final Video Deleted!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete video");
+    }
+  };
+
+  const handleDeleteAudio = async () => {
+    if (!config) return;
+    if (!confirm("Are you sure you want to delete the background music?")) return;
+    
+    try {
+      if (config.backgroundMusicFileId) {
+        await deleteImageKitFile(config.backgroundMusicFileId);
+      }
+      const updatedConfig = { ...config };
+      delete updatedConfig.backgroundMusicUrl;
+      delete updatedConfig.backgroundMusicFileId;
+      
+      const confRef = ref(database, 'greetings/main/config');
+      await set(confRef, updatedConfig);
+      alert("Background Music Deleted!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete audio");
     }
   };
 
@@ -340,6 +390,7 @@ export default function AdminPage() {
           {[
             { id: "memories", label: "Memories", icon: ImageIcon },
             { id: "settings", label: "Settings", icon: Gear },
+            { id: "media", label: "Media & Finale", icon: FilmStrip },
           ].map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -584,20 +635,35 @@ export default function AdminPage() {
                     </select>
                   </div>
 
-                  <div className="space-y-1.5 flex flex-col justify-center">
-                    <label className="text-xs text-zinc-400 font-mono uppercase tracking-wider block mb-2">Enable Background Music</label>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="sr-only peer" 
-                        checked={config.isMusicEnabled ?? true} 
-                        onChange={(e) => setConfig({ ...config, isMusicEnabled: e.target.checked })} 
-                      />
-                      <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-400"></div>
-                      <span className="ml-3 text-sm font-medium text-zinc-300">
-                        {config.isMusicEnabled ?? true ? "Enabled" : "Disabled"}
-                      </span>
-                    </label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-zinc-400 font-mono uppercase tracking-wider block">Text Reveal Effect</label>
+                    <div className="flex items-center gap-4 mt-3">
+                      <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.enableTextReveal ?? true}
+                          onChange={(e) => setConfig({ ...config, enableTextReveal: e.target.checked })}
+                          className="rounded border-zinc-800 text-amber-400 focus:ring-amber-400 bg-zinc-900 w-4 h-4 cursor-pointer"
+                        />
+                        Enable Reveal Animation
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-zinc-400 font-mono uppercase tracking-wider block">Text Reveal Speed (Seconds per Character)</label>
+                    <input
+                      type="number"
+                      step="0.005"
+                      min="0.005"
+                      max="0.2"
+                      value={config.textRevealSpeed ?? 0.03}
+                      onChange={(e) => setConfig({ ...config, textRevealSpeed: parseFloat(e.target.value) || 0.03 })}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400"
+                    />
+                    <p className="text-[10px] text-zinc-500 font-mono">Stagger delay in seconds (default is 0.03. Smaller is faster, larger is slower).</p>
                   </div>
                 </div>
 
@@ -612,6 +678,53 @@ export default function AdminPage() {
                   <p className="text-emerald-400 text-xs font-mono">Settings successfully updated and saved!</p>
                 )}
               </form>
+
+            </div>
+          )}
+
+          {activeTab === "media" && config && (
+            <div className="space-y-8">
+              <div className="border-b border-zinc-800 pb-4">
+                <h2 className="text-xl font-semibold">Media & Finale</h2>
+                <p className="text-zinc-500 text-xs">Manage background music, the final reveal video, and the end screen experience.</p>
+              </div>
+
+              <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 space-y-4">
+                <h3 className="text-sm font-semibold text-amber-400 font-mono uppercase tracking-wider">Final Reveal Video</h3>
+                <p className="text-xs text-zinc-500">Upload an MP4/WebM video for the grand finale. This will be preloaded on site load.</p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                  <div className="relative flex-1">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setFinalVideoFile(e.target.files[0]);
+                        }
+                      }}
+                      className="block w-full text-sm text-zinc-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-zinc-900 file:text-amber-400 hover:file:bg-zinc-800 cursor-pointer border border-zinc-800 rounded-xl bg-zinc-900/50"
+                    />
+                  </div>
+                  <button
+                    onClick={handleFinalVideoSubmit}
+                    disabled={finalVideoUploading || !finalVideoFile}
+                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-sm shadow-md transition-colors cursor-pointer disabled:opacity-40"
+                  >
+                    {finalVideoUploading ? `Uploading ${finalVideoProgress}%` : "Upload Video"}
+                  </button>
+                </div>
+                {config.finalVideoUrl && (
+                  <div className="flex items-center justify-between gap-4 p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                    <p className="text-xs text-zinc-500 font-mono truncate flex-1">
+                      Current: <a href={config.finalVideoUrl} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline">{config.finalVideoUrl}</a>
+                    </p>
+                    <button type="button" onClick={handleDeleteFinalVideo} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold transition-colors cursor-pointer">
+                      <Trash className="w-3.5 h-3.5" /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 space-y-4">
                 <h3 className="text-sm font-semibold text-amber-400 font-mono uppercase tracking-wider">Background Music</h3>
@@ -639,12 +752,95 @@ export default function AdminPage() {
                   </button>
                 </div>
                 {config.backgroundMusicUrl && (
-                  <p className="text-xs text-zinc-500 font-mono truncate">
-                    Current: <a href={config.backgroundMusicUrl} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline">{config.backgroundMusicUrl}</a>
-                  </p>
+                  <div className="flex items-center justify-between gap-4 p-3 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                    <p className="text-xs text-zinc-500 font-mono truncate flex-1">
+                      Current: <a href={config.backgroundMusicUrl} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline">{config.backgroundMusicUrl}</a>
+                    </p>
+                    <button type="button" onClick={handleDeleteAudio} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold transition-colors cursor-pointer">
+                      <Trash className="w-3.5 h-3.5" /> Delete
+                    </button>
+                  </div>
                 )}
               </div>
 
+              <form onSubmit={handleConfigUpdate} className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 space-y-4">
+                <h3 className="text-sm font-semibold text-amber-400 font-mono uppercase tracking-wider">Media & End Screen Config</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5 flex flex-col justify-center">
+                    <label className="text-xs text-zinc-400 font-mono uppercase tracking-wider block mb-2">Enable Background Music</label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={config.isMusicEnabled ?? true} 
+                        onChange={(e) => setConfig({ ...config, isMusicEnabled: e.target.checked })} 
+                      />
+                      <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-400"></div>
+                      <span className="ml-3 text-sm font-medium text-zinc-300">
+                        {config.isMusicEnabled ?? true ? "Enabled" : "Disabled"}
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-zinc-400 font-mono uppercase tracking-wider block">Mute BGM during Final Video?</label>
+                    <select
+                      value={config.muteBgmDuringVideo || "auto"}
+                      onChange={(e) => setConfig({ ...config, muteBgmDuringVideo: e.target.value as any })}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-300 focus:outline-none focus:border-amber-400"
+                    >
+                      <option value="auto">Auto-detect (Mute if video has audio)</option>
+                      <option value="yes">Yes (Always mute background music)</option>
+                      <option value="no">No (Keep playing background music)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-400 font-mono uppercase tracking-wider block">End Screen Title</label>
+                  <input
+                    type="text"
+                    value={config.endScreenTitle || ""}
+                    onChange={(e) => setConfig({ ...config, endScreenTitle: e.target.value })}
+                    placeholder="Forever."
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-400 font-mono uppercase tracking-wider block">End Screen Body Text</label>
+                  <textarea
+                    value={config.endScreenBody || ""}
+                    onChange={(e) => setConfig({ ...config, endScreenBody: e.target.value })}
+                    placeholder="Every moment with you is a gift..."
+                    rows={2}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400 resize-none"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs text-zinc-400 font-mono uppercase tracking-wider block">After-Video Phrases (One per line)</label>
+                  <textarea
+                    value={config.afterVideoPhrases || ""}
+                    onChange={(e) => setConfig({ ...config, afterVideoPhrases: e.target.value })}
+                    placeholder={"I didn't just build this to say Happy Birthday...\nI built this to remind you...\n..."}
+                    rows={5}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-400 font-mono"
+                  />
+                  <p className="text-[10px] text-zinc-500 font-mono">Each line will represent a text block shown sequentially after the video ends, prior to the final screen.</p>
+                </div>
+
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-sm shadow-md transition-colors cursor-pointer"
+                >
+                  Save Config
+                </button>
+                {configSuccess && (
+                  <p className="text-emerald-400 text-xs font-mono">Config successfully updated!</p>
+                )}
+              </form>
             </div>
           )}
 

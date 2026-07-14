@@ -21,6 +21,10 @@ export interface AppConfig {
   envelopeTitle: string;
   birthDate: string;
   finalVideoUrl?: string;
+  finalVideoFileId?: string;
+  muteBgmDuringVideo?: "auto" | "yes" | "no";
+  endScreenTitle?: string;
+  endScreenBody?: string;
   theme?: "gold" | "rose" | "midnight";
   isMusicEnabled?: boolean;
   heroGreeting?: string;
@@ -28,6 +32,10 @@ export interface AppConfig {
   memoriesTitle?: string;
   memoriesDescription?: string;
   backgroundMusicUrl?: string;
+  backgroundMusicFileId?: string;
+  enableTextReveal?: boolean;
+  textRevealSpeed?: number;
+  afterVideoPhrases?: string;
 }
 
 export interface DatabaseSchema {
@@ -45,7 +53,10 @@ export const DEFAULT_CONFIG: AppConfig = {
   heroGreeting: "Love of my life,",
   heroQuote: "In all the world, there is no heart for me like yours.\nIn all the world, there is no love for you like mine.",
   memoriesTitle: "Our Memories",
-  memoriesDescription: "A timeline of our favorite moments. Each polaroid is a beautiful memory, a quiet smile, and a story we shared together."
+  memoriesDescription: "A timeline of our favorite moments. Each polaroid is a beautiful memory, a quiet smile, and a story we shared together.",
+  enableTextReveal: true,
+  textRevealSpeed: 0.03,
+  afterVideoPhrases: "I didn't just build this to say Happy Birthday...\nI built this to remind you...\nThat in a universe of infinite possibilities...\nYou are my absolute favorite one.\nI love you, forever."
 };
 
 export const DEFAULT_DB: DatabaseSchema = {
